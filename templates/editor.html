@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ doc.title }} — FriendRules</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f0ede8;
+    --surface: #fff;
+    --text: #1a1a1a;
+    --muted: #888;
+    --accent: {{ doc.accent }};
+    --doc-bg: {{ doc.color }};
+    --border: #e0dbd3;
+    --toolbar-h: 50px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* TOP NAV */
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    flex-shrink: 0;
+  }
+  .back-btn {
+    background: none;
+    border: none;
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 8px;
+    color: var(--muted);
+    transition: background 0.15s, color 0.15s;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+  }
+  .back-btn:hover { background: var(--bg); color: var(--text); }
+  .logo-mini {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    color: var(--accent);
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .divider { width: 1px; height: 24px; background: var(--border); }
+  .doc-title-input {
+    border: none;
+    outline: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+    background: transparent;
+    flex: 1;
+    min-width: 0;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: background 0.15s;
+  }
+  .doc-title-input:hover { background: var(--bg); }
+  .doc-title-input:focus { background: var(--bg); }
+  .save-status {
+    font-size: 0.78rem;
+    color: var(--muted);
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .save-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #ccc;
+    transition: background 0.3s;
+  }
+  .save-dot.saving { background: #f0a500; }
+  .save-dot.saved { background: #4CAF50; }
+  .share-btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 7px 18px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    white-space: nowrap;
+  }
+  .share-btn:hover { opacity: 0.85; }
+
+  /* FORMATTING TOOLBAR */
+  .toolbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    height: var(--toolbar-h);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    overflow: hidden;
+  }
+  .tb-btn {
+    background: none;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 9px;
+    cursor: pointer;
+    font-size: 0.88rem;
+    color: #444;
+    font-family: 'DM Sans', sans-serif;
+    transition: background 0.12s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+  }
+  .tb-btn:hover { background: var(--bg); }
+  .tb-btn.active {
+    background: #e8f0eb;
+    color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent);
+    font-weight: 700;
+  }
+  .tb-sep { width: 1px; height: 22px; background: var(--border); margin: 0 4px; }
+  .tb-select {
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    background: var(--surface);
+    cursor: pointer;
+    outline: none;
+    height: 30px;
+  }
+  .color-btn {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 2px solid #ccc;
+    cursor: pointer;
+    transition: transform 0.12s, box-shadow 0.12s;
+    flex-shrink: 0;
+  }
+  .color-btn:hover { transform: scale(1.2); }
+  .color-btn.active {
+    box-shadow: 0 0 0 3px white, 0 0 0 5px currentColor;
+    transform: scale(1.15);
+  }
+
+  /* PAGE AREA */
+  .page-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 40px 20px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  .page {
+    background: var(--doc-bg);
+    width: 100%;
+    max-width: 780px;
+    min-height: 1056px;
+    border-radius: 8px;
+    box-shadow: 0 4px 32px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.06);
+    padding: 80px 90px;
+    position: relative;
+    border-left: 5px solid var(--accent);
+  }
+
+  /* The editable content area */
+  #editor {
+    outline: none;
+    min-height: 900px;
+    font-size: 1rem;
+    line-height: 1.75;
+    color: #1a1a1a;
+    word-break: break-word;
+  }
+  #editor h1 { font-family: 'Playfair Display', serif; font-size: 1.9rem; margin-bottom: 18px; }
+  #editor h2 { font-family: 'Playfair Display', serif; font-size: 1.3rem; margin: 22px 0 10px; }
+  #editor h3 { font-size: 1.05rem; font-weight: 600; margin: 16px 0 8px; }
+  #editor p { margin-bottom: 10px; }
+  #editor ul, #editor ol { margin: 10px 0 10px 24px; }
+  #editor li { margin-bottom: 5px; }
+  #editor strong { font-weight: 700; }
+  #editor em { font-style: italic; }
+  #editor u { text-decoration: underline; }
+  #editor hr { border: none; border-top: 2px solid var(--border); margin: 20px 0; }
+  #editor a { color: var(--accent); }
+  #editor blockquote {
+    border-left: 4px solid var(--accent);
+    margin: 14px 0;
+    padding: 8px 18px;
+    background: rgba(0,0,0,0.03);
+    border-radius: 0 6px 6px 0;
+    font-style: italic;
+  }
+
+  /* Page ruler accent */
+  .page-corner {
+    position: absolute;
+    top: 0; left: 0;
+    width: 60px; height: 60px;
+    background: linear-gradient(135deg, var(--accent) 50%, transparent 50%);
+    border-radius: 8px 0 0 0;
+    opacity: 0.15;
+  }
+
+  /* WORD COUNT BAR */
+  .statusbar {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 6px 24px;
+    font-size: 0.76rem;
+    color: var(--muted);
+    display: flex;
+    gap: 20px;
+    flex-shrink: 0;
+  }
+
+  /* SHARE TOAST */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #1a1a1a;
+    color: white;
+    padding: 10px 22px;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 999;
+    pointer-events: none;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <a href="/" class="back-btn" title="Back to home">🏠</a>
+  <div class="logo-mini">🤝 FriendRules</div>
+  <div class="divider"></div>
+  <input type="text" class="doc-title-input" id="docTitleInput" value="{{ doc.title }}" />
+  <div class="save-status">
+    <div class="save-dot" id="saveDot"></div>
+    <span id="saveLabel">All changes saved</span>
+  </div>
+  <button class="share-btn" onclick="printDoc()">🖨️ Print / Export</button>
+  <button class="share-btn" style="background:#c62828;" onclick="openDeleteConfirm()">🗑️ Delete</button>
+</div>
+
+<!-- DELETE CONFIRM -->
+<div style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:300;align-items:center;justify-content:center;" id="delOverlay">
+  <div style="background:white;border-radius:14px;padding:28px 30px;width:320px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+    <div style="font-size:2rem;margin-bottom:10px">🗑️</div>
+    <h3 style="font-family:'Playfair Display',serif;margin-bottom:8px;">Delete this document?</h3>
+    <p style="color:#888;font-size:0.88rem;margin-bottom:22px;">This can't be undone.</p>
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <button onclick="document.getElementById('delOverlay').style.display='none'" style="background:none;border:1.5px solid #e0dbd3;padding:9px 22px;border-radius:8px;font-family:'DM Sans',sans-serif;cursor:pointer;">Cancel</button>
+      <button onclick="deleteAndGoHome()" style="background:#c62828;color:white;border:none;padding:9px 22px;border-radius:8px;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;">Yes, Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <select class="tb-select" onchange="formatBlock(this.value)" id="blockSelect">
+    <option value="p">Paragraph</option>
+    <option value="h1">Heading 1</option>
+    <option value="h2">Heading 2</option>
+    <option value="h3">Heading 3</option>
+    <option value="blockquote">Quote</option>
+  </select>
+  <div class="tb-sep"></div>
+  <button class="tb-btn" onclick="exec('bold')" title="Bold"><strong>B</strong></button>
+  <button class="tb-btn" onclick="exec('italic')" title="Italic"><em>I</em></button>
+  <button class="tb-btn" onclick="exec('underline')" title="Underline"><u>U</u></button>
+  <button class="tb-btn" onclick="exec('strikeThrough')" title="Strikethrough"><s>S</s></button>
+  <div class="tb-sep"></div>
+  <button class="tb-btn" onclick="exec('justifyLeft')" title="Align Left">⬅</button>
+  <button class="tb-btn" onclick="exec('justifyCenter')" title="Center">≡</button>
+  <button class="tb-btn" onclick="exec('justifyRight')" title="Align Right">➡</button>
+  <div class="tb-sep"></div>
+  <button class="tb-btn" onclick="exec('insertUnorderedList')" title="Bullet List">• List</button>
+  <button class="tb-btn" onclick="exec('insertOrderedList')" title="Numbered List">1. List</button>
+  <div class="tb-sep"></div>
+  <button class="tb-btn" onclick="insertHR()" title="Divider">― Rule</button>
+  <button class="tb-btn" onclick="insertEmoji()" title="Add Emoji">😊</button>
+  <div class="tb-sep"></div>
+  <!-- Color swatches -->
+  <div class="color-btn" data-color="#3d6b4f" style="background:#3d6b4f" onclick="exec('foreColor','#3d6b4f')" title="Green"></div>
+  <div class="color-btn" data-color="#1565c0" style="background:#1565c0" onclick="exec('foreColor','#1565c0')" title="Blue"></div>
+  <div class="color-btn" data-color="#c62828" style="background:#c62828" onclick="exec('foreColor','#c62828')" title="Red"></div>
+  <div class="color-btn" data-color="#6a1b9a" style="background:#6a1b9a" onclick="exec('foreColor','#6a1b9a')" title="Purple"></div>
+  <div class="color-btn" data-color="#e65100" style="background:#e65100" onclick="exec('foreColor','#e65100')" title="Orange"></div>
+  <div class="color-btn" data-color="#1a1a1a" style="background:#1a1a1a" onclick="exec('foreColor','#1a1a1a')" title="Black"></div>
+  <div class="tb-sep"></div>
+  <button class="tb-btn" onclick="exec('undo')" title="Undo">↩</button>
+  <button class="tb-btn" onclick="exec('redo')" title="Redo">↪</button>
+</div>
+
+<!-- PAGE -->
+<div class="page-area">
+  <div class="page">
+    <div class="page-corner"></div>
+    <div id="editor" contenteditable="true">{{ doc.content | safe }}</div>
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+<div class="statusbar">
+  <span id="wordCount">0 words</span>
+  <span id="charCount">0 characters</span>
+  <span>Created: {{ doc.created }}</span>
+  <span>Template: {{ doc.template.replace('_', ' ').title() }}</span>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const DOC_ID = "{{ doc_id }}";
+let saveTimer = null;
+
+// Save selection before clicking toolbar (fixes color buttons stealing focus)
+let savedRange = null;
+document.addEventListener('mousedown', (e) => {
+  if (e.target.closest('.toolbar')) {
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      savedRange = sel.getRangeAt(0).cloneRange();
+    }
+    e.preventDefault(); // prevent focus loss from editor
+  }
+});
+
+function restoreSelection() {
+  const sel = window.getSelection();
+  if (savedRange) {
+    sel.removeAllRanges();
+    sel.addRange(savedRange);
+  }
+  document.getElementById('editor').focus();
+}
+
+function exec(cmd, val = null) {
+  restoreSelection();
+  document.execCommand(cmd, false, val);
+  document.getElementById('editor').focus();
+  updateToolbarState();
+}
+
+function formatBlock(tag) {
+  restoreSelection();
+  document.execCommand('formatBlock', false, tag);
+  document.getElementById('editor').focus();
+  updateToolbarState();
+}
+
+// Map command names to button titles for active state detection
+const CMD_BUTTONS = {
+  'bold':          '[title="Bold"]',
+  'italic':        '[title="Italic"]',
+  'underline':     '[title="Underline"]',
+  'strikeThrough': '[title="Strikethrough"]',
+  'justifyLeft':   '[title="Align Left"]',
+  'justifyCenter': '[title="Center"]',
+  'justifyRight':  '[title="Align Right"]',
+  'insertUnorderedList': '[title="Bullet List"]',
+  'insertOrderedList':   '[title="Numbered List"]',
+};
+
+function updateToolbarState() {
+  for (const [cmd, selector] of Object.entries(CMD_BUTTONS)) {
+    const btn = document.querySelector(selector);
+    if (btn) btn.classList.toggle('active', document.queryCommandState(cmd));
+  }
+  // Update active color swatch
+  const currentColor = document.queryCommandValue('foreColor');
+  document.querySelectorAll('.color-btn').forEach(btn => {
+    const btnColor = btn.dataset.color;
+    const match = currentColor && normalizeColor(currentColor) === normalizeColor(btnColor);
+    btn.classList.toggle('active', match);
+  });
+}
+
+// Normalize colors for comparison (handles rgb() vs hex)
+function normalizeColor(color) {
+  if (!color) return '';
+  const d = document.createElement('div');
+  d.style.color = color;
+  document.body.appendChild(d);
+  const computed = getComputedStyle(d).color;
+  document.body.removeChild(d);
+  return computed;
+}
+
+function insertHR() {
+  document.execCommand('insertHTML', false, '<hr>');
+}
+
+const EMOJIS = ['❤️','🤝','✨','🎉','💬','🌟','🔒','🎈','💪','🌈','😊','👫','👬','👭','🥰'];
+let emojiIdx = 0;
+function insertEmoji() {
+  const e = EMOJIS[emojiIdx % EMOJIS.length];
+  emojiIdx++;
+  document.execCommand('insertText', false, e);
+}
+
+// Auto-save
+const editor = document.getElementById('editor');
+const titleInput = document.getElementById('docTitleInput');
+const saveDot = document.getElementById('saveDot');
+const saveLabel = document.getElementById('saveLabel');
+
+function setSaving() {
+  saveDot.className = 'save-dot saving';
+  saveLabel.textContent = 'Saving…';
+}
+function setSaved() {
+  saveDot.className = 'save-dot saved';
+  saveLabel.textContent = 'All changes saved';
+}
+
+async function saveDoc() {
+  setSaving();
+  await fetch(`/api/save/${DOC_ID}`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      content: editor.innerHTML,
+      title: titleInput.value
+    })
+  });
+  setSaved();
+  updateCounts();
+}
+
+function scheduleSave() {
+  setSaving();
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveDoc, 1200);
+}
+
+editor.addEventListener('input', scheduleSave);
+titleInput.addEventListener('input', scheduleSave);
+
+// Update toolbar whenever cursor moves or selection changes
+editor.addEventListener('keyup', updateToolbarState);
+editor.addEventListener('mouseup', updateToolbarState);
+document.addEventListener('selectionchange', () => {
+  if (document.activeElement === editor) updateToolbarState();
+});
+
+// Word/char count
+function updateCounts() {
+  const text = editor.innerText || '';
+  const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+  document.getElementById('wordCount').textContent = `${words} word${words !== 1 ? 's' : ''}`;
+  document.getElementById('charCount').textContent = `${text.length} characters`;
+}
+editor.addEventListener('input', updateCounts);
+updateCounts();
+
+// Print
+function printDoc() {
+  window.print();
+}
+
+// Delete
+function openDeleteConfirm() {
+  document.getElementById('delOverlay').style.display = 'flex';
+}
+async function deleteAndGoHome() {
+  await fetch(`/api/delete/${DOC_ID}`, { method: 'DELETE' });
+  window.location.href = '/';
+}
+
+// Toast helper
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    e.preventDefault();
+    saveDoc();
+    showToast('✅ Saved!');
+  }
+});
+
+// Initial save dot state
+setSaved();
+</script>
+
+<style>
+@media print {
+  .topbar, .toolbar, .statusbar { display: none !important; }
+  .page-area { padding: 0; }
+  .page {
+    box-shadow: none;
+    border-radius: 0;
+    min-height: auto;
+    border-left: none;
+  }
+}
+</style>
+</body>
+</html>

@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Friendship Rules — Template Gallery</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f0ede8;
+    --surface: #ffffff;
+    --text: #1a1a1a;
+    --muted: #777;
+    --accent: #3d6b4f;
+    --accent-light: #e8f0eb;
+    --border: #e0dbd3;
+    --shadow: 0 2px 16px rgba(0,0,0,0.08);
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* TOP NAV */
+  nav {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .logo span { font-size: 1.5rem; }
+  .nav-btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .nav-btn:hover { opacity: 0.85; }
+
+  /* HERO */
+  .hero {
+    text-align: center;
+    padding: 56px 32px 40px;
+  }
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.4rem;
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+  .hero p {
+    color: var(--muted);
+    font-size: 1rem;
+    font-weight: 300;
+  }
+
+  /* SECTION LABEL */
+  .section-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 0 40px;
+    margin-bottom: 16px;
+  }
+
+  /* TEMPLATE GRID */
+  .template-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+    padding: 0 40px 60px;
+  }
+
+  .template-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 2px solid var(--border);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s;
+    position: relative;
+  }
+  .template-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.13);
+    border-color: #aaa;
+  }
+
+  .card-preview {
+    height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .card-preview::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, transparent 60%, rgba(0,0,0,0.04) 100%);
+  }
+  .card-lines {
+    position: absolute;
+    bottom: 14px;
+    left: 16px;
+    right: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .card-line {
+    height: 3px;
+    border-radius: 2px;
+    opacity: 0.25;
+  }
+
+  .card-info {
+    padding: 14px 16px;
+    border-top: 1px solid var(--border);
+  }
+  .card-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+  }
+  .card-sub {
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+  .card-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255,255,255,0.9);
+    border-radius: 20px;
+    padding: 2px 10px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    backdrop-filter: blur(4px);
+  }
+
+  /* RECENT DOCS */
+  .recent-section {
+    padding: 0 40px 60px;
+  }
+  .recent-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 14px;
+    margin-top: 16px;
+  }
+  .recent-card {
+    background: var(--surface);
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    padding: 16px;
+    cursor: pointer;
+    transition: box-shadow 0.15s, transform 0.15s;
+  }
+  .recent-card:hover {
+    box-shadow: var(--shadow);
+    transform: translateY(-2px);
+  }
+  .recent-icon { font-size: 1.4rem; margin-bottom: 8px; }
+  .recent-title { font-weight: 600; font-size: 0.88rem; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .recent-meta { font-size: 0.75rem; color: var(--muted); }
+  .empty-recent { color: var(--muted); font-size: 0.9rem; padding: 20px 0; }
+  .recent-card { position: relative; }
+  .delete-btn {
+    position: absolute;
+    top: 8px; right: 8px;
+    background: none;
+    border: none;
+    font-size: 0.85rem;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s, background 0.15s;
+    border-radius: 6px;
+    padding: 3px 6px;
+    color: #c62828;
+    line-height: 1;
+  }
+  .recent-card:hover .delete-btn { opacity: 1; }
+  .delete-btn:hover { background: #fdecea; }
+
+  .confirm-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 300;
+    align-items: center;
+    justify-content: center;
+  }
+  .confirm-overlay.open { display: flex; }
+  .confirm-box {
+    background: white;
+    border-radius: 14px;
+    padding: 28px 30px;
+    width: 340px;
+    max-width: 90vw;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    animation: pop 0.18s ease;
+    text-align: center;
+  }
+  .confirm-box .icon { font-size: 2.2rem; margin-bottom: 12px; }
+  .confirm-box h3 { font-family: 'Playfair Display', serif; font-size: 1.2rem; margin-bottom: 6px; }
+  .confirm-box p { color: var(--muted); font-size: 0.88rem; margin-bottom: 22px; }
+  .confirm-actions { display: flex; gap: 10px; justify-content: center; }
+  .btn-keep { background: none; border: 1.5px solid var(--border); padding: 9px 22px; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; cursor: pointer; }
+  .btn-delete { background: #c62828; color: white; border: none; padding: 9px 22px; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+  .btn-delete:hover { opacity: 0.85; }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: 16px;
+    width: 400px;
+    max-width: 90vw;
+    padding: 32px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    animation: pop 0.2s ease;
+  }
+  @keyframes pop {
+    from { transform: scale(0.94); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  .modal h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    margin-bottom: 6px;
+  }
+  .modal-sub { color: var(--muted); font-size: 0.88rem; margin-bottom: 22px; }
+  .modal label { font-size: 0.82rem; font-weight: 600; display: block; margin-bottom: 6px; color: #555; }
+  .modal input {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.15s;
+    margin-bottom: 20px;
+  }
+  .modal input:focus { border-color: var(--accent); }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+  .btn-cancel {
+    background: none;
+    border: 1.5px solid var(--border);
+    padding: 9px 20px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+  .btn-create {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 9px 22px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .btn-create:hover { opacity: 0.87; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo"><span>🤝</span> FriendRules</div>
+  <button class="nav-btn" onclick="openModal('blank')">+ New Document</button>
+</nav>
+
+<div class="hero">
+  <h1>Friendship Rules Studio</h1>
+  <p>Create, customize, and save your friendship agreements — like Google Docs, but for friendships.</p>
+</div>
+
+<!-- RECENT DOCS -->
+<div class="recent-section">
+  <div class="section-label">Recent Documents</div>
+  <div class="recent-grid" id="recentGrid">
+    <div class="empty-recent">No documents yet. Start with a template below! ✨</div>
+  </div>
+</div>
+
+<!-- TEMPLATES -->
+<div class="section-label">Start from a Template</div>
+<div class="template-grid">
+  {% for key, tmpl in templates.items() %}
+  <div class="template-card" onclick="openModal('{{ key }}')">
+    {% if key == 'blank' %}<div class="card-badge">Start fresh</div>{% endif %}
+    <div class="card-preview" style="background: {{ tmpl.color }};">
+      {{ tmpl.icon }}
+      <div class="card-lines">
+        <div class="card-line" style="background: {{ tmpl.accent }}; width: 70%;"></div>
+        <div class="card-line" style="background: {{ tmpl.accent }}; width: 90%;"></div>
+        <div class="card-line" style="background: {{ tmpl.accent }}; width: 60%;"></div>
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="card-name">{{ tmpl.name }}</div>
+      <div class="card-sub">Friendship Rules Template</div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- CREATE MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h2 id="modalTitle">New Document</h2>
+    <div class="modal-sub" id="modalSub">Give your friendship rules a name.</div>
+    <label for="docTitle">Document Title</label>
+    <input type="text" id="docTitle" placeholder="e.g. Best Friends Forever Rules" />
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-create" onclick="createDoc()">Create →</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE CONFIRM MODAL -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="icon">🗑️</div>
+    <h3>Delete this document?</h3>
+    <p id="confirmDocName">This can't be undone.</p>
+    <div class="confirm-actions">
+      <button class="btn-keep" onclick="closeConfirm()">Keep it</button>
+      <button class="btn-delete" onclick="confirmDelete()">Yes, Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let selectedTemplate = 'blank';
+let pendingDeleteId = null;
+
+const TEMPLATE_NAMES = {{ templates | tojson }};
+
+function openConfirm(docId, docTitle, e) {
+  e.stopPropagation();
+  pendingDeleteId = docId;
+  document.getElementById('confirmDocName').textContent = `"${docTitle}" will be permanently deleted.`;
+  document.getElementById('confirmOverlay').classList.add('open');
+}
+function closeConfirm() {
+  pendingDeleteId = null;
+  document.getElementById('confirmOverlay').classList.remove('open');
+}
+async function confirmDelete() {
+  if (!pendingDeleteId) return;
+  await fetch(`/api/delete/${pendingDeleteId}`, { method: 'DELETE' });
+  closeConfirm();
+  loadRecent();
+}
+
+function openModal(key) {
+  selectedTemplate = key;
+  const tmpl = TEMPLATE_NAMES[key];
+  document.getElementById('modalTitle').textContent = `Use "${tmpl.name}" Template`;
+  document.getElementById('modalSub').textContent = 'Give your document a name to get started.';
+  document.getElementById('docTitle').value = '';
+  document.getElementById('modalOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('docTitle').focus(), 150);
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
+document.getElementById('modalOverlay').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+document.getElementById('docTitle').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') createDoc();
+});
+
+async function createDoc() {
+  const title = document.getElementById('docTitle').value.trim() || 'Untitled Friendship Rules';
+  const res = await fetch('/api/new', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ template: selectedTemplate, title })
+  });
+  const data = await res.json();
+  window.location.href = `/editor/${data.doc_id}`;
+}
+
+async function loadRecent() {
+  const res = await fetch('/api/docs');
+  const docs = await res.json();
+  const grid = document.getElementById('recentGrid');
+  if (!docs.length) {
+    grid.innerHTML = '<div class="empty-recent">No documents yet. Start with a template below! ✨</div>';
+    return;
+  }
+  const tmplMap = {{ templates | tojson }};
+  grid.innerHTML = docs.map(d => {
+    const tmpl = tmplMap[d.template] || tmplMap['blank'];
+    return `<div class="recent-card" onclick="window.location='/editor/${d.id}'">
+      <div class="recent-icon">${tmpl.icon}</div>
+      <div class="recent-title">${d.title}</div>
+      <div class="recent-meta">Edited at ${d.updated}</div>
+      <button class="delete-btn" onclick="openConfirm('${d.id}', '${d.title.replace(/'/g, "\\'")}', event)" title="Delete">🗑️</button>
+    </div>`;
+  }).join('');
+}
+
+loadRecent();
+</script>
+</body>
+</html>
