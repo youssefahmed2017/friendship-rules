@@ -384,21 +384,45 @@ const titleInput = document.getElementById('docTitleInput');
 const saveDot = document.getElementById('saveDot');
 const saveLabel = document.getElementById('saveLabel');
 
-// Always save selection when user is in editor
-editor.addEventListener('mouseup', saveSelection);
-editor.addEventListener('keyup', saveSelection);
+// ── SELECTION PRESERVATION ──────────────────────────────────────
+// Save selection whenever it changes inside editor
 document.addEventListener('selectionchange', () => {
-  if (document.activeElement === editor) saveSelection();
+  const sel = window.getSelection();
+  if (sel && sel.rangeCount > 0 && editor.contains(sel.anchorNode)) {
+    savedRange = sel.getRangeAt(0).cloneRange();
+    updateToolbarState();
+    updateFontSizeDisplay();
+  }
 });
 
-function saveSelection() {
-  const sel = window.getSelection();
-  if (sel && sel.rangeCount > 0) {
-    savedRange = sel.getRangeAt(0).cloneRange();
+// Prevent ALL toolbar elements from stealing focus
+document.querySelector('.toolbar').addEventListener('mousedown', (e) => {
+  e.preventDefault();
+});
+
+// For SELECT: use mousedown to grab value and apply BEFORE focus shifts
+document.getElementById('blockSelect').addEventListener('mousedown', () => {
+  // selection saved already via selectionchange
+});
+document.getElementById('blockSelect').addEventListener('change', function() {
+  const val = this.value;
+  this.value = '';
+  if (!val) return;
+  applyTextStyle(val);
+});
+
+// For font size INPUT: intercept Enter key
+document.getElementById('fontSizeInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    applyFontSize(this.value);
+    editor.focus();
   }
-  updateToolbarState();
-  updateFontSizeDisplay();
-}
+});
+// Also apply on blur
+document.getElementById('fontSizeInput').addEventListener('blur', function() {
+  applyFontSize(this.value);
+});
 
 function restoreSelection() {
   editor.focus();
@@ -409,13 +433,7 @@ function restoreSelection() {
   }
 }
 
-// Prevent toolbar clicks from clearing selection (except inputs/selects)
-document.querySelector('.toolbar').addEventListener('mousedown', (e) => {
-  if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
-    e.preventDefault();
-  }
-});
-
+// ── COMMANDS ─────────────────────────────────────────────────────
 function exec(cmd, val = null) {
   restoreSelection();
   document.execCommand(cmd, false, val);
@@ -428,33 +446,27 @@ function applyTextStyle(val) {
   restoreSelection();
   document.execCommand('formatBlock', false, val);
   editor.focus();
-  saveSelection();
   scheduleSave();
-  // Reset select to blank
-  setTimeout(() => document.getElementById('blockSelect').value = '', 50);
 }
 
 function applyFontSize(size) {
   size = parseInt(size);
   if (!size || size < 1) return;
-
   restoreSelection();
-  const sel = window.getSelection();
-  if (!sel || sel.rangeCount === 0) { editor.focus(); return; }
 
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0) return;
   const range = sel.getRangeAt(0);
 
   if (range.collapsed) {
-    // Nothing selected — store size for next typed characters
-    document.execCommand('styleWithCSS', false, true);
-    document.execCommand('fontSize', false, '7');
-    const fonts = editor.querySelectorAll('font[size="7"]');
-    fonts.forEach(f => { f.removeAttribute('size'); f.style.fontSize = size + 'px'; });
+    // No text selected — apply to current block via CSS
+    const node = sel.anchorNode?.nodeType === 3 ? sel.anchorNode.parentElement : sel.anchorNode;
+    if (node && editor.contains(node)) node.style.fontSize = size + 'px';
     editor.focus();
     return;
   }
 
-  // Has selection — wrap in span
+  // Text selected — wrap in span
   const span = document.createElement('span');
   span.style.fontSize = size + 'px';
   try {
@@ -470,9 +482,10 @@ function applyFontSize(size) {
 
 function updateFontSizeDisplay() {
   try {
-    const sel = window.getSelection();
-    if (!sel || sel.rangeCount === 0) return;
-    const node = sel.anchorNode?.nodeType === 3 ? sel.anchorNode.parentElement : sel.anchorNode;
+    if (!savedRange) return;
+    const node = savedRange.startContainer?.nodeType === 3
+      ? savedRange.startContainer.parentElement
+      : savedRange.startContainer;
     if (node && editor.contains(node)) {
       const fs = window.getComputedStyle(node).fontSize;
       if (fs) document.getElementById('fontSizeInput').value = parseInt(fs);
@@ -480,15 +493,15 @@ function updateFontSizeDisplay() {
   } catch(e) {}
 }
 
-// Map command names to button titles for active state detection
+// ── TOOLBAR STATE ─────────────────────────────────────────────────
 const CMD_BUTTONS = {
-  'bold':          '[title="Bold"]',
-  'italic':        '[title="Italic"]',
-  'underline':     '[title="Underline"]',
-  'strikeThrough': '[title="Strikethrough"]',
-  'justifyLeft':   '[title="Align Left"]',
-  'justifyCenter': '[title="Center"]',
-  'justifyRight':  '[title="Align Right"]',
+  'bold':                '[title="Bold"]',
+  'italic':              '[title="Italic"]',
+  'underline':           '[title="Underline"]',
+  'strikeThrough':       '[title="Strikethrough"]',
+  'justifyLeft':         '[title="Align Left"]',
+  'justifyCenter':       '[title="Center"]',
+  'justifyRight':        '[title="Align Right"]',
   'insertUnorderedList': '[title="Bullet List"]',
   'insertOrderedList':   '[title="Numbered List"]',
 };
@@ -510,27 +523,24 @@ function normalizeColor(color) {
   const d = document.createElement('div');
   d.style.color = color;
   document.body.appendChild(d);
-  const computed = getComputedStyle(d).color;
+  const c = getComputedStyle(d).color;
   document.body.removeChild(d);
-  return computed;
+  return c;
 }
 
-function insertHR() {
-  restoreSelection();
-  document.execCommand('insertHTML', false, '<hr>');
-}
+// ── MISC ──────────────────────────────────────────────────────────
+function insertHR() { restoreSelection(); document.execCommand('insertHTML', false, '<hr>'); }
 
 const EMOJIS = ['❤️','🤝','✨','🎉','💬','🌟','🔒','🎈','💪','🌈','😊','👫','👬','👭','🥰'];
 let emojiIdx = 0;
 function insertEmoji() {
   restoreSelection();
-  const e = EMOJIS[emojiIdx % EMOJIS.length];
-  emojiIdx++;
-  document.execCommand('insertText', false, e);
+  document.execCommand('insertText', false, EMOJIS[emojiIdx++ % EMOJIS.length]);
 }
 
+// ── SAVE ──────────────────────────────────────────────────────────
 function setSaving() { saveDot.className = 'save-dot saving'; saveLabel.textContent = 'Saving…'; }
-function setSaved() { saveDot.className = 'save-dot saved'; saveLabel.textContent = 'All changes saved'; }
+function setSaved()  { saveDot.className = 'save-dot saved';  saveLabel.textContent = 'All changes saved'; }
 
 async function saveDoc() {
   setSaving();
@@ -549,7 +559,10 @@ function scheduleSave() {
   saveTimer = setTimeout(saveDoc, 1200);
 }
 
-// Word/char count
+editor.addEventListener('input', scheduleSave);
+titleInput.addEventListener('input', scheduleSave);
+
+// ── WORD COUNT ────────────────────────────────────────────────────
 function updateCounts() {
   const text = editor.innerText || '';
   const words = text.trim() ? text.trim().split(/\s+/).length : 0;
