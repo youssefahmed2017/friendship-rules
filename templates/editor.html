@@ -377,84 +377,107 @@
 <script>
 const DOC_ID = "{{ doc_id }}";
 let saveTimer = null;
-
-// Save selection before clicking toolbar (fixes color buttons stealing focus)
 let savedRange = null;
-document.addEventListener('mousedown', (e) => {
-  if (e.target.closest('.toolbar')) {
-    const sel = window.getSelection();
-    if (sel && sel.rangeCount > 0) {
-      savedRange = sel.getRangeAt(0).cloneRange();
-    }
-    e.preventDefault(); // prevent focus loss from editor
-  }
+
+const editor = document.getElementById('editor');
+const titleInput = document.getElementById('docTitleInput');
+const saveDot = document.getElementById('saveDot');
+const saveLabel = document.getElementById('saveLabel');
+
+// Always save selection when user is in editor
+editor.addEventListener('mouseup', saveSelection);
+editor.addEventListener('keyup', saveSelection);
+document.addEventListener('selectionchange', () => {
+  if (document.activeElement === editor) saveSelection();
 });
 
-function restoreSelection() {
+function saveSelection() {
   const sel = window.getSelection();
+  if (sel && sel.rangeCount > 0) {
+    savedRange = sel.getRangeAt(0).cloneRange();
+  }
+  updateToolbarState();
+  updateFontSizeDisplay();
+}
+
+function restoreSelection() {
+  editor.focus();
   if (savedRange) {
+    const sel = window.getSelection();
     sel.removeAllRanges();
     sel.addRange(savedRange);
   }
-  document.getElementById('editor').focus();
 }
+
+// Prevent toolbar clicks from clearing selection (except inputs/selects)
+document.querySelector('.toolbar').addEventListener('mousedown', (e) => {
+  if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
+    e.preventDefault();
+  }
+});
 
 function exec(cmd, val = null) {
   restoreSelection();
   document.execCommand(cmd, false, val);
-  document.getElementById('editor').focus();
+  editor.focus();
   updateToolbarState();
 }
 
 function applyTextStyle(val) {
   if (!val) return;
   restoreSelection();
-  const sel = window.getSelection();
-  if (!sel || sel.rangeCount === 0) return;
-
-  if (val === 'p' || val === 'h1' || val === 'h2' || val === 'h3' || val === 'h4' || val === 'h5' || val === 'blockquote') {
-    document.execCommand('formatBlock', false, val);
-  }
-  document.getElementById('editor').focus();
-  updateToolbarState();
+  document.execCommand('formatBlock', false, val);
+  editor.focus();
+  saveSelection();
   scheduleSave();
+  // Reset select to blank
+  setTimeout(() => document.getElementById('blockSelect').value = '', 50);
 }
 
 function applyFontSize(size) {
   size = parseInt(size);
   if (!size || size < 1) return;
+
   restoreSelection();
   const sel = window.getSelection();
-  if (!sel || sel.rangeCount === 0) return;
+  if (!sel || sel.rangeCount === 0) { editor.focus(); return; }
+
   const range = sel.getRangeAt(0);
 
   if (range.collapsed) {
-    // No selection — just update the input visually, apply on next typed char
-    editor.style.fontSize = size + 'px'; // fallback
-    document.getElementById('editor').focus();
+    // Nothing selected — store size for next typed characters
+    document.execCommand('styleWithCSS', false, true);
+    document.execCommand('fontSize', false, '7');
+    const fonts = editor.querySelectorAll('font[size="7"]');
+    fonts.forEach(f => { f.removeAttribute('size'); f.style.fontSize = size + 'px'; });
+    editor.focus();
     return;
   }
 
-  // Wrap selected text in a span with the desired font size
+  // Has selection — wrap in span
   const span = document.createElement('span');
   span.style.fontSize = size + 'px';
   try {
     range.surroundContents(span);
   } catch(e) {
-    // If selection spans multiple elements, extract and wrap
-    const fragment = range.extractContents();
-    span.appendChild(fragment);
+    const frag = range.extractContents();
+    span.appendChild(frag);
     range.insertNode(span);
   }
-
-  // Re-select the span content
-  const newRange = document.createRange();
-  newRange.selectNodeContents(span);
-  sel.removeAllRanges();
-  sel.addRange(newRange);
-
-  document.getElementById('editor').focus();
+  editor.focus();
   scheduleSave();
+}
+
+function updateFontSizeDisplay() {
+  try {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    const node = sel.anchorNode?.nodeType === 3 ? sel.anchorNode.parentElement : sel.anchorNode;
+    if (node && editor.contains(node)) {
+      const fs = window.getComputedStyle(node).fontSize;
+      if (fs) document.getElementById('fontSizeInput').value = parseInt(fs);
+    }
+  } catch(e) {}
 }
 
 // Map command names to button titles for active state detection
@@ -475,16 +498,13 @@ function updateToolbarState() {
     const btn = document.querySelector(selector);
     if (btn) btn.classList.toggle('active', document.queryCommandState(cmd));
   }
-  // Update active color swatch
   const currentColor = document.queryCommandValue('foreColor');
   document.querySelectorAll('.color-btn').forEach(btn => {
-    const btnColor = btn.dataset.color;
-    const match = currentColor && normalizeColor(currentColor) === normalizeColor(btnColor);
+    const match = currentColor && normalizeColor(currentColor) === normalizeColor(btn.dataset.color);
     btn.classList.toggle('active', match);
   });
 }
 
-// Normalize colors for comparison (handles rgb() vs hex)
 function normalizeColor(color) {
   if (!color) return '';
   const d = document.createElement('div');
@@ -496,41 +516,28 @@ function normalizeColor(color) {
 }
 
 function insertHR() {
+  restoreSelection();
   document.execCommand('insertHTML', false, '<hr>');
 }
 
 const EMOJIS = ['❤️','🤝','✨','🎉','💬','🌟','🔒','🎈','💪','🌈','😊','👫','👬','👭','🥰'];
 let emojiIdx = 0;
 function insertEmoji() {
+  restoreSelection();
   const e = EMOJIS[emojiIdx % EMOJIS.length];
   emojiIdx++;
   document.execCommand('insertText', false, e);
 }
 
-// Auto-save
-const editor = document.getElementById('editor');
-const titleInput = document.getElementById('docTitleInput');
-const saveDot = document.getElementById('saveDot');
-const saveLabel = document.getElementById('saveLabel');
-
-function setSaving() {
-  saveDot.className = 'save-dot saving';
-  saveLabel.textContent = 'Saving…';
-}
-function setSaved() {
-  saveDot.className = 'save-dot saved';
-  saveLabel.textContent = 'All changes saved';
-}
+function setSaving() { saveDot.className = 'save-dot saving'; saveLabel.textContent = 'Saving…'; }
+function setSaved() { saveDot.className = 'save-dot saved'; saveLabel.textContent = 'All changes saved'; }
 
 async function saveDoc() {
   setSaving();
   await fetch(`/api/save/${DOC_ID}`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-      content: editor.innerHTML,
-      title: titleInput.value
-    })
+    body: JSON.stringify({ content: editor.innerHTML, title: titleInput.value })
   });
   setSaved();
   updateCounts();
@@ -541,24 +548,6 @@ function scheduleSave() {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(saveDoc, 1200);
 }
-
-editor.addEventListener('input', scheduleSave);
-titleInput.addEventListener('input', scheduleSave);
-
-// Update toolbar whenever cursor moves or selection changes
-editor.addEventListener('keyup', updateToolbarState);
-editor.addEventListener('mouseup', updateToolbarState);
-document.addEventListener('selectionchange', () => {
-  if (document.activeElement === editor) {
-    updateToolbarState();
-    // Update font size input
-    const el = window.getSelection()?.anchorNode?.parentElement;
-    if (el) {
-      const fs = window.getComputedStyle(el).fontSize;
-      if (fs) document.getElementById('fontSizeInput').value = parseInt(fs);
-    }
-  }
-});
 
 // Word/char count
 function updateCounts() {
