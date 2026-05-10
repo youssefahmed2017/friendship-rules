@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Friendship Rules — Template Gallery</title>
+<title>Rules Studio — Template Gallery</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -311,12 +311,12 @@
 <body>
 
 <nav>
-  <div class="logo"><span>🤝</span> FriendRules</div>
+  <div class="logo"><span>🤝</span> Rules Studio</div>
   <button class="nav-btn" onclick="openModal('blank')">+ New Document</button>
 </nav>
 
 <div class="hero">
-  <h1>Friendship Rules Studio</h1>
+  <h1>Rules Studio</h1>
   <p>Create, customize, and save your friendship agreements — like Google Docs, but for friendships.</p>
 </div>
 
@@ -344,7 +344,7 @@
     </div>
     <div class="card-info">
       <div class="card-name">{{ tmpl.name }}</div>
-      <div class="card-sub">Friendship Rules Template</div>
+      <div class="card-sub">Rules Studio Template</div>
     </div>
   </div>
   {% endfor %}
@@ -354,7 +354,7 @@
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <h2 id="modalTitle">New Document</h2>
-    <div class="modal-sub" id="modalSub">Give your friendship rules a name.</div>
+    <div class="modal-sub" id="modalSub">Give your rules a name.</div>
     <label for="docTitle">Document Title</label>
     <input type="text" id="docTitle" placeholder="e.g. Best Friends Forever Rules" />
     <div class="modal-actions">
@@ -423,7 +423,7 @@ document.getElementById('docTitle').addEventListener('keydown', (e) => {
 });
 
 async function createDoc() {
-  const title = document.getElementById('docTitle').value.trim() || 'Untitled Friendship Rules';
+  const title = document.getElementById('docTitle').value.trim() || 'Untitled Rules';
   const res = await fetch('/api/new', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},

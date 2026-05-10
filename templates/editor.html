@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{{ doc.title }} — FriendRules</title>
+<title>{{ doc.title }} — Rules Studio</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -204,9 +204,11 @@
     color: #1a1a1a;
     word-break: break-word;
   }
-  #editor h1 { font-family: 'Playfair Display', serif; font-size: 1.9rem; margin-bottom: 18px; }
-  #editor h2 { font-family: 'Playfair Display', serif; font-size: 1.3rem; margin: 22px 0 10px; }
-  #editor h3 { font-size: 1.05rem; font-weight: 600; margin: 16px 0 8px; }
+  #editor h1 { font-family: 'Playfair Display', serif; font-size: 50px; margin-bottom: 18px; }
+  #editor h2 { font-family: 'Playfair Display', serif; font-size: 40px; margin: 22px 0 10px; }
+  #editor h3 { font-size: 30px; font-weight: 600; margin: 16px 0 8px; }
+  #editor h4 { font-size: 20px; font-weight: 600; margin: 14px 0 6px; }
+  #editor h5 { font-size: 10px; font-weight: 600; margin: 10px 0 4px; }
   #editor p { margin-bottom: 10px; }
   #editor ul, #editor ol { margin: 10px 0 10px 24px; }
   #editor li { margin-bottom: 5px; }
@@ -273,7 +275,7 @@
 <!-- TOP BAR -->
 <div class="topbar">
   <a href="/" class="back-btn" title="Back to home">🏠</a>
-  <div class="logo-mini">🤝 FriendRules</div>
+  <div class="logo-mini">🤝 Rules Studio</div>
   <div class="divider"></div>
   <input type="text" class="doc-title-input" id="docTitleInput" value="{{ doc.title }}" />
   <div class="save-status">
@@ -299,22 +301,40 @@
 
 <!-- TOOLBAR -->
 <div class="toolbar">
-  <select class="tb-select" onchange="formatBlock(this.value)" id="blockSelect">
-    <option value="p">Paragraph</option>
-    <option value="h1">Heading 1</option>
-    <option value="h2">Heading 2</option>
-    <option value="h3">Heading 3</option>
-    <option value="blockquote">Quote</option>
+  <!-- Text style dropdown -->
+  <select class="tb-select" onchange="applyTextStyle(this.value)" id="blockSelect">
+    <option value="">— Style —</option>
+    <optgroup label="Title">
+      <option value="title">Title (50px)</option>
+    </optgroup>
+    <optgroup label="Headings">
+      <option value="h2">Heading 2 (40px)</option>
+      <option value="h3">Heading 3 (30px)</option>
+      <option value="h4">Heading 4 (20px)</option>
+      <option value="h5">Heading 5 (10px)</option>
+    </optgroup>
+    <optgroup label="Body">
+      <option value="p">Paragraph</option>
+      <option value="blockquote">Quote</option>
+    </optgroup>
   </select>
+  <div class="tb-sep"></div>
+  <!-- Custom font size -->
+  <div style="display:flex;align-items:center;gap:4px;">
+    <input type="number" id="fontSizeInput" min="6" max="200" value="16"
+      style="width:52px;border:1.5px solid var(--border);border-radius:6px;padding:4px 6px;font-family:'DM Sans',sans-serif;font-size:0.82rem;outline:none;height:30px;text-align:center;"
+      title="Font size" onchange="applyFontSize(this.value)" />
+    <span style="font-size:0.75rem;color:var(--muted);">px</span>
+  </div>
   <div class="tb-sep"></div>
   <button class="tb-btn" onclick="exec('bold')" title="Bold"><strong>B</strong></button>
   <button class="tb-btn" onclick="exec('italic')" title="Italic"><em>I</em></button>
   <button class="tb-btn" onclick="exec('underline')" title="Underline"><u>U</u></button>
   <button class="tb-btn" onclick="exec('strikeThrough')" title="Strikethrough"><s>S</s></button>
   <div class="tb-sep"></div>
-  <button class="tb-btn" onclick="exec('justifyLeft')" title="Align Left">⬅</button>
-  <button class="tb-btn" onclick="exec('justifyCenter')" title="Center">≡</button>
-  <button class="tb-btn" onclick="exec('justifyRight')" title="Align Right">➡</button>
+  <button class="tb-btn" onclick="exec('justifyLeft')" title="Align Left">Left</button>
+  <button class="tb-btn" onclick="exec('justifyCenter')" title="Center">Center</button>
+  <button class="tb-btn" onclick="exec('justifyRight')" title="Align Right">Right</button>
   <div class="tb-sep"></div>
   <button class="tb-btn" onclick="exec('insertUnorderedList')" title="Bullet List">• List</button>
   <button class="tb-btn" onclick="exec('insertOrderedList')" title="Numbered List">1. List</button>
@@ -330,8 +350,8 @@
   <div class="color-btn" data-color="#e65100" style="background:#e65100" onclick="exec('foreColor','#e65100')" title="Orange"></div>
   <div class="color-btn" data-color="#1a1a1a" style="background:#1a1a1a" onclick="exec('foreColor','#1a1a1a')" title="Black"></div>
   <div class="tb-sep"></div>
-  <button class="tb-btn" onclick="exec('undo')" title="Undo">↩</button>
-  <button class="tb-btn" onclick="exec('redo')" title="Redo">↪</button>
+  <button class="tb-btn" onclick="exec('undo')" title="Undo">Undo</button>
+  <button class="tb-btn" onclick="exec('redo')" title="Redo">Redo</button>
 </div>
 
 <!-- PAGE -->
@@ -384,11 +404,33 @@ function exec(cmd, val = null) {
   updateToolbarState();
 }
 
-function formatBlock(tag) {
+function applyTextStyle(val) {
+  if (!val) return;
   restoreSelection();
-  document.execCommand('formatBlock', false, tag);
+  if (val === 'title') {
+    document.execCommand('formatBlock', false, 'h1');
+    // h1 is styled as title (50px) via CSS
+  } else {
+    document.execCommand('formatBlock', false, val);
+  }
   document.getElementById('editor').focus();
   updateToolbarState();
+}
+
+function applyFontSize(size) {
+  if (!size || size < 1) return;
+  restoreSelection();
+  // Use execCommand fontSize with a workaround for exact px sizes
+  document.execCommand('styleWithCSS', false, true);
+  document.execCommand('fontSize', false, '7'); // placeholder
+  // Now replace the size="7" with actual px
+  const spans = editor.querySelectorAll('font[size="7"]');
+  spans.forEach(span => {
+    span.removeAttribute('size');
+    span.style.fontSize = size + 'px';
+  });
+  document.getElementById('editor').focus();
+  scheduleSave();
 }
 
 // Map command names to button titles for active state detection
@@ -483,7 +525,15 @@ titleInput.addEventListener('input', scheduleSave);
 editor.addEventListener('keyup', updateToolbarState);
 editor.addEventListener('mouseup', updateToolbarState);
 document.addEventListener('selectionchange', () => {
-  if (document.activeElement === editor) updateToolbarState();
+  if (document.activeElement === editor) {
+    updateToolbarState();
+    // Update font size input
+    const el = window.getSelection()?.anchorNode?.parentElement;
+    if (el) {
+      const fs = window.getComputedStyle(el).fontSize;
+      if (fs) document.getElementById('fontSizeInput').value = parseInt(fs);
+    }
+  }
 });
 
 // Word/char count
